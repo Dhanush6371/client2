@@ -11,6 +11,10 @@ const App = () => {
   const [newOrderCount, setNewOrderCount] = useState(0); // Track new orders
   const [pendingOrderCount, setPendingOrderCount] = useState(0); // Track pending orders
   const [tapAndCollectCount, setTapAndCollectCount] = useState(0); // Track Tap and Collect orders
+  const [lastOrderCount, setLastOrderCount] = useState(0); // Track the previous order count to detect new orders
+  
+  // Notification sound
+  const notificationSound = new Audio("/iphone.mp3"); // Ensure you have a notification sound file at this path
 
   // Fetch orders from API
   const fetchOrders = async () => {
@@ -32,6 +36,15 @@ const App = () => {
 
       // Track Tap and Collect orders
       setTapAndCollectCount(sortedOrders.filter((order) => parseInt(order.tableNumber) === 0 && !order.isDelivered).length);
+      
+      // Play notification sound if new orders are received
+      if (sortedOrders.length > lastOrderCount) {
+        notificationSound.play();
+      }
+
+      // Update last order count
+      setLastOrderCount(sortedOrders.length);
+
     } catch (err) {
       setError(err.message);
     } finally {
@@ -59,7 +72,7 @@ const App = () => {
     fetchReservations();
     const intervalId = setInterval(fetchOrders, 10000);
     return () => clearInterval(intervalId);
-  }, []);
+  }, [lastOrderCount]); // Dependency added to re-fetch when new orders come in
 
   // Mark an order as delivered
   const handleMarkAsDelivered = async (orderId) => {
